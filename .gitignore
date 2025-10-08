@@ -1,0 +1,21 @@
+.idea/
+.cursor/
+.qoder/
+.trae/
+.lingma/
+
+__pycache__/ 
+**/__pycache__/
+
+docker/data/
+docker/logs/
+
+thirdparty/
+
+# prd.md
+
+*.log
+.env
+
+.DS_Store
+**/.DS_Store
