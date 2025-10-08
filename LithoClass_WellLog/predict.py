@@ -12,7 +12,7 @@ warnings.filterwarnings('ignore')
 
 from config import (
     DATA_PATHS, MODEL_PATHS, OUTPUT_PATHS,
-    TARGET_COLUMN, ID_COLUMN, FEATURE_COLUMNS,
+    TARGET_COLUMN, SUBMISSION_TARGET_COLUMN, ID_COLUMN, FEATURE_COLUMNS,
     LITHOLOGY_MAPPING, RANDOM_STATE
 )
 from utils import (
@@ -50,7 +50,8 @@ class PredictionPipeline:
             feature_engineer_path = os.path.join(self.model_dir, 'feature_engineer.pkl')
         
         try:
-            self.preprocessor = load_model(preprocessor_path)
+            import joblib
+            self.preprocessor = joblib.load(preprocessor_path)
             print(f"预处理器已从 {preprocessor_path} 加载")
         except Exception as e:
             print(f"加载预处理器失败: {e}")
@@ -58,7 +59,8 @@ class PredictionPipeline:
             self.preprocessor = DataPreprocessor()
         
         try:
-            self.feature_engineer = load_model(feature_engineer_path)
+            import joblib
+            self.feature_engineer = joblib.load(feature_engineer_path)
             print(f"特征工程器已从 {feature_engineer_path} 加载")
         except Exception as e:
             print(f"加载特征工程器失败: {e}")
@@ -87,13 +89,15 @@ class PredictionPipeline:
                         self.ensemble_manager = EnsembleManager()
                     
                     ensemble_type = model_name.replace('ensemble_', '')
-                    ensemble = load_model(model_path)
+                    import joblib
+                    ensemble = joblib.load(model_path)
                     self.ensemble_manager.ensembles[ensemble_type] = ensemble
                     print(f"集成模型 {ensemble_type} 已加载")
                 
                 else:
                     # 加载单个模型
-                    model = load_model(model_path)
+                    import joblib
+                    model = joblib.load(model_path)
                     self.models[model_name] = model
                     print(f"模型 {model_name} 已加载")
             
@@ -276,68 +280,11 @@ class PredictionPipeline:
         
         return self.prediction_results
     
-    def save_predictions(self, filename_prefix='predictions'):
-        """保存预测结果"""
-        print("保存预测结果...")
-        
-        if not self.prediction_results:
-            print("没有预测结果可保存")
-            return
-        
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        
-        # 保存个别模型预测
-        for model_name, predictions in self.prediction_results['individual_predictions'].items():
-            filename = f"{filename_prefix}_{model_name}_{timestamp}.csv"
-            filepath = os.path.join(self.output_dir, filename)
-            
-            # 确保预测是1D数组
-            predictions = np.array(predictions).flatten()
-            
-            # 创建预测DataFrame
-            if self.prediction_results['test_ids'] is not None:
-                test_ids = np.array(self.prediction_results['test_ids']).flatten()
-                pred_df = pd.DataFrame({
-                    ID_COLUMN: test_ids,
-                    TARGET_COLUMN: predictions
-                })
-            else:
-                # 如果没有test_ids，创建序号
-                pred_df = pd.DataFrame({
-                    ID_COLUMN: range(len(predictions)),
-                    TARGET_COLUMN: predictions
-                })
-            
-            pred_df.to_csv(filepath, index=False)
-            print(f"模型 {model_name} 预测已保存到: {filepath}")
-        
-        # 保存最终集成预测
-        if self.prediction_results['final_prediction'] is not None:
-            filename = f"{filename_prefix}_final_ensemble_{timestamp}.csv"
-            filepath = os.path.join(self.output_dir, filename)
-            
-            # 确保预测是1D数组
-            final_predictions = np.array(self.prediction_results['final_prediction']).flatten()
-            
-            if self.prediction_results['test_ids'] is not None:
-                test_ids = np.array(self.prediction_results['test_ids']).flatten()
-                pred_df = pd.DataFrame({
-                    ID_COLUMN: test_ids,
-                    TARGET_COLUMN: final_predictions
-                })
-            else:
-                # 如果没有test_ids，创建序号
-                pred_df = pd.DataFrame({
-                    ID_COLUMN: range(len(final_predictions)),
-                    TARGET_COLUMN: final_predictions
-                })
-            
-            pred_df.to_csv(filepath, index=False)
-            print(f"最终集成预测已保存到: {filepath}")
+
     
     def create_submission_files(self, filename_prefix='submission'):
-        """创建提交文件"""
-        print("创建提交文件...")
+        """创建提交文件（可直接用于竞赛提交）"""
+        print("保存预测结果为提交文件...")
         
         if not self.prediction_results:
             print("没有预测结果可创建提交文件")
@@ -359,19 +306,19 @@ class PredictionPipeline:
                 test_ids = np.array(self.prediction_results['test_ids']).flatten()
                 submission_df = pd.DataFrame({
                     ID_COLUMN: test_ids,
-                    TARGET_COLUMN: predictions
+                    SUBMISSION_TARGET_COLUMN: predictions
                 })
             else:
                 # 如果没有test_ids，创建序号
                 submission_df = pd.DataFrame({
                     ID_COLUMN: range(len(predictions)),
-                    TARGET_COLUMN: predictions
+                    SUBMISSION_TARGET_COLUMN: predictions
                 })
             
-            # 映射回原始标签（如果需要）
-            if LITHOLOGY_MAPPING:
-                # 直接使用LITHOLOGY_MAPPING进行映射，将数字标签映射为文字标签
-                submission_df[TARGET_COLUMN] = submission_df[TARGET_COLUMN].map(LITHOLOGY_MAPPING)
+            # 保持数字标签格式，不进行映射（符合sample_submission.csv格式）
+            # if LITHOLOGY_MAPPING:
+            #     # 直接使用LITHOLOGY_MAPPING进行映射，将数字标签映射为文字标签
+            #     submission_df[SUBMISSION_TARGET_COLUMN] = submission_df[SUBMISSION_TARGET_COLUMN].map(LITHOLOGY_MAPPING)
             
             submission_df.to_csv(filepath, index=False)
             submission_files.append(filepath)
@@ -389,19 +336,19 @@ class PredictionPipeline:
                 test_ids = np.array(self.prediction_results['test_ids']).flatten()
                 submission_df = pd.DataFrame({
                     ID_COLUMN: test_ids,
-                    TARGET_COLUMN: final_predictions
+                    SUBMISSION_TARGET_COLUMN: final_predictions
                 })
             else:
                 # 如果没有test_ids，创建序号
                 submission_df = pd.DataFrame({
                     ID_COLUMN: range(len(final_predictions)),
-                    TARGET_COLUMN: final_predictions
+                    SUBMISSION_TARGET_COLUMN: final_predictions
                 })
             
-            # 映射回原始标签
-            if LITHOLOGY_MAPPING:
-                # 直接使用LITHOLOGY_MAPPING进行映射，将数字标签映射为文字标签
-                submission_df[TARGET_COLUMN] = submission_df[TARGET_COLUMN].map(LITHOLOGY_MAPPING)
+            # 保持数字标签格式，不进行映射（符合sample_submission.csv格式）
+            # if LITHOLOGY_MAPPING:
+            #     # 直接使用LITHOLOGY_MAPPING进行映射，将数字标签映射为文字标签
+            #     submission_df[SUBMISSION_TARGET_COLUMN] = submission_df[SUBMISSION_TARGET_COLUMN].map(LITHOLOGY_MAPPING)
             
             submission_df.to_csv(filepath, index=False)
             submission_files.append(filepath)
@@ -546,7 +493,6 @@ if __name__ == "__main__":
             }
             
             # 保存测试结果
-            pipeline.save_predictions()
             pipeline.create_submission_files()
             pipeline.generate_prediction_report()
         
@@ -555,7 +501,6 @@ if __name__ == "__main__":
             pipeline.load_preprocessors()
             pipeline.load_models()
             results = pipeline.predict(test_data)
-            pipeline.save_predictions()
             pipeline.create_submission_files()
             pipeline.generate_prediction_report()
     

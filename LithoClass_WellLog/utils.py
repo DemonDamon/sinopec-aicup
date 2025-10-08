@@ -21,7 +21,7 @@ warnings.filterwarnings('ignore')
 from config import (
     TRAIN_DATA_PATH, TEST_DATA_PATH, SAMPLE_SUBMISSION_PATH,
     MODEL_SAVE_PATH, LOG_PATH, OUTPUT_PATH,
-    FEATURE_COLUMNS, TARGET_COLUMN, GROUP_COLUMN, DEPTH_COLUMN, ID_COLUMN,
+    FEATURE_COLUMNS, TARGET_COLUMN, SUBMISSION_TARGET_COLUMN, GROUP_COLUMN, DEPTH_COLUMN, ID_COLUMN,
     LITHOLOGY_MAPPING, EVALUATION_METRICS, LOGGING_CONFIG
 )
 
@@ -74,27 +74,27 @@ def load_data(data_type='train'):
     
     return data
 
-def save_model(model, model_name, model_type='sklearn'):
+def save_model(model, model_path, model_type='sklearn'):
     """
     保存模型
     
     Args:
         model: 模型对象
-        model_name: 模型名称
+        model_path: 模型文件路径（完整路径）
         model_type: 模型类型 ('sklearn', 'torch', 'custom')
     """
-    model_dir = MODEL_SAVE_PATH / model_name
-    model_dir.mkdir(exist_ok=True)
+    # 确保路径是 Path 对象
+    model_path = Path(model_path)
+    
+    # 确保父目录存在
+    model_path.parent.mkdir(parents=True, exist_ok=True)
     
     if model_type == 'sklearn':
-        model_path = model_dir / f"{model_name}.pkl"
         joblib.dump(model, model_path)
     elif model_type == 'torch':
-        model_path = model_dir / f"{model_name}.pth"
         import torch
         torch.save(model.state_dict(), model_path)
     elif model_type == 'custom':
-        model_path = model_dir / f"{model_name}.pkl"
         with open(model_path, 'wb') as f:
             pickle.dump(model, f)
     
@@ -171,7 +171,7 @@ def create_submission_file(test_ids, predictions, filename='submission.csv'):
     """
     submission = pd.DataFrame({
         ID_COLUMN: test_ids,
-        TARGET_COLUMN: predictions
+        SUBMISSION_TARGET_COLUMN: predictions
     })
     
     submission_path = OUTPUT_PATH / filename

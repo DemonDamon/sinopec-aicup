@@ -28,7 +28,8 @@ for path in [MODEL_SAVE_PATH, LOG_PATH, OUTPUT_PATH]:
 # ==================== 数据配置 ====================
 # 数据列配置
 FEATURE_COLUMNS = ['SP', 'GR', 'AC']  # 测井曲线特征
-TARGET_COLUMN = 'label'  # 目标列
+TARGET_COLUMN = 'label'  # 目标列（训练数据中的标签列）
+SUBMISSION_TARGET_COLUMN = 'predict'  # 提交文件中的预测列名
 GROUP_COLUMN = 'WELL'  # 分组列（用于GroupKFold）
 DEPTH_COLUMN = 'DEPTH'  # 深度列
 ID_COLUMN = 'id'  # ID列
