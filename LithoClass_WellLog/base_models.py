@@ -436,12 +436,19 @@ def optimize_model_hyperparameters(X_train, y_train, groups, model_type='lightgb
             }
         elif model_type == 'catboost':
             params = {
-                'iterations': trial.suggest_int('iterations', 100, 1000),
-                'depth': trial.suggest_int('depth', 3, 10),
-                'learning_rate': trial.suggest_float('learning_rate', 0.01, 0.3),
-                'l2_leaf_reg': trial.suggest_float('l2_leaf_reg', 1, 10),
+                'iterations': trial.suggest_int('iterations', 800, 2000),
+                'depth': trial.suggest_int('depth', 4, 10),
+                'learning_rate': trial.suggest_float('learning_rate', 0.01, 0.15, log=True),
+                'l2_leaf_reg': trial.suggest_float('l2_leaf_reg', 1, 20),
                 'border_count': trial.suggest_int('border_count', 32, 255),
-                'bagging_temperature': trial.suggest_float('bagging_temperature', 0, 1),
+                'min_data_in_leaf': trial.suggest_int('min_data_in_leaf', 1, 100),
+                'max_leaves': trial.suggest_int('max_leaves', 16, 128),
+                'subsample': trial.suggest_float('subsample', 0.6, 1.0),
+                'colsample_bylevel': trial.suggest_float('colsample_bylevel', 0.6, 1.0),
+                'random_seed': 42,
+                'verbose': False,
+                'early_stopping_rounds': 100,
+                'use_best_model': True
             }
         elif model_type == 'xgboost':
             params = {

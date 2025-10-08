@@ -232,7 +232,8 @@ OUTPUT_PATHS = {
     'predictions': str(OUTPUT_PATH / 'predictions'),
     'submissions': str(OUTPUT_PATH / 'submissions'),
     'experiments': str(OUTPUT_PATH / 'experiments'),
-    'visualizations': str(OUTPUT_PATH / 'visualizations')
+    'visualizations': str(OUTPUT_PATH / 'visualizations'),
+    'feature_importance': str(OUTPUT_PATH / 'feature_importance')
 }
 
 # 创建输出子目录
