@@ -19,3 +19,49 @@ thirdparty/
 
 .DS_Store
 **/.DS_Store
+
+# 机器学习项目相关文件
+# CatBoost 训练信息
+catboost_info/
+**/catboost_info/
+
+# 模型文件
+models/
+**/models/
+*.pkl
+*.joblib
+*.h5
+*.pt
+*.pth
+
+# 日志文件
+logs/
+**/logs/
+
+# 输出文件
+output/
+**/output/
+
+# 实验结果
+experiments/
+**/experiments/
+
+# 预测结果
+predictions/
+**/predictions/
+
+# 提交文件
+submissions/
+**/submissions/
+
+# 可视化文件
+visualizations/
+**/visualizations/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/
+
+# 数据文件（如果不需要版本控制）
+# data/
+# **/data/
