@@ -453,7 +453,6 @@ def predict_test_data(model_dir=None, test_data_path=None, output_dir=None,
     results = pipeline.predict(test_data, use_ensembles=use_ensembles)
     
     # 保存结果
-    pipeline.save_predictions()
     submission_files = pipeline.create_submission_files()
     report = pipeline.generate_prediction_report()
     
